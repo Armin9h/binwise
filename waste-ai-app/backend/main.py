@@ -5,10 +5,13 @@ from pathlib import Path
 from urllib.parse import quote
 import tempfile
 import os
-from PIL import Image
+from io import BytesIO
+from PIL import Image, UnidentifiedImageError
+import pillow_heif
 
 from prompts import AVC_CATEGORIES
 
+pillow_heif.register_heif_opener()
 app = FastAPI()
 
 # -----------------------
@@ -247,8 +250,24 @@ async def analyze_image(file: UploadFile = File(...)):
         tmp_path = tmp.name
 
     try:
-        img = Image.open(tmp_path).convert("RGB")
-
+        try:
+            img = Image.open(BytesIO(content)).convert("RGB")
+        except UnidentifiedImageError:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "status": "error",
+                    "message": "Bildformatet stöds inte. Testa att använda JPG eller PNG."
+                }
+            )
+        except Exception:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "status": "error",
+                    "message": "Kunde inte läsa bilden. Testa att ta bilden igen eller välj en bild från galleriet."
+                }
+            )
         ranked, raw_top1, raw_top2 = classify_avc_ensemble(img, top_k=2)
 
         if should_refuse(raw_top1, raw_top2):
