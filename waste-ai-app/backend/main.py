@@ -22,7 +22,7 @@ FRONTEND_DIR = BASE_DIR / "frontend"
 IMAGES_DIR = BASE_DIR / "images"
 
 app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
-app.mount("/reference-images", StaticFiles(directory=str(IMAGES_DIR)), name="reference-images")
+app.mount("/images", StaticFiles(directory=str(IMAGES_DIR)), name="images")
 
 # -----------------------
 # Confidence thresholds
@@ -76,7 +76,7 @@ def get_reference_image_url(label: str) -> str | None:
     filename = REFERENCE_IMAGE_MAP.get(label)
     if not filename:
         return None
-    return f"/reference-images/{quote(filename)}"
+    return f"../images/{quote(filename)}"
 
 # -----------------------
 # Reuse note helper
